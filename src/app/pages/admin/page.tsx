@@ -1,4 +1,5 @@
 "use client";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import FileTable from "./table";
 import CreateTagForm from "./tagForm";
 import {
@@ -8,7 +9,11 @@ import {
     TabsTrigger,
 } from "@/components/ui/tabs"
 
+import PDFGallery from "../../components/PDFGallery";
+
+
 const AdminPage = () => {
+
 
 
     return (
@@ -18,9 +23,11 @@ const AdminPage = () => {
                 <TabsList>
                     <TabsTrigger value="1">Files</TabsTrigger>
                     <TabsTrigger value="2">Tags</TabsTrigger>
+                    <TabsTrigger value="3">PDF</TabsTrigger>
                 </TabsList>
                 <TabsContent value="1"><FileTable /></TabsContent>
                 <TabsContent value="2"><CreateTagForm /></TabsContent>
+                <TabsContent value="3"><PDFGallery /></TabsContent>
             </Tabs>
 
 
