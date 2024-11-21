@@ -6,15 +6,15 @@ const request_mapping = '/file';
 
 
 
-// Fetch all files
+// Fetch all admin
 export const getFiles = async (): Promise<File[]> => {
     const response = await apiClient.get<File[]>(request_mapping);
     return response.data;
 };
 
 // Fetch a file by ID
-export const getFileById = async (id: number): Promise<File> => {
-    const response = await apiClient.get<File>(`${request_mapping}/${id}`);
+export const getFileById = async (id: string): Promise<File> => {
+    const response = await apiClient.get<File>(`/file/${id}`);
     return response.data;
 };
 

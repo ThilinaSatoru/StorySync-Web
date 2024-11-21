@@ -104,7 +104,7 @@ const FileTable = () => {
         fetchFiltersData();
     }, [fetchFiltersData]);
 
-    // Paginated files
+    // Paginated admin
     const paginatedFiles = useMemo(() => {
         const startIndex = (currentPage - 1) * itemsPerPage;
         return filteredFiles.slice(startIndex, startIndex + itemsPerPage);
@@ -116,7 +116,7 @@ const FileTable = () => {
         [filteredFiles, itemsPerPage]
     );
 
-    // Fetch files with useCallback to prevent unnecessary re-renders
+    // Fetch admin with useCallback to prevent unnecessary re-renders
     const fetchFiles = useCallback(async () => {
         try {
             setLoading(true);
@@ -124,7 +124,7 @@ const FileTable = () => {
             setFiles(data);
             setCurrentPage(1); // Reset to first page on new data
         } catch (error) {
-            console.error("Error fetching files:", error);
+            console.error("Error fetching admin:", error);
         } finally {
             setLoading(false);
         }
