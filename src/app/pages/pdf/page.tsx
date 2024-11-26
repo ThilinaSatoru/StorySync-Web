@@ -37,6 +37,7 @@ const page = () => {
     return (
         <div>
             {!loading ? <>
+
                 <FileGallery files={files} />
             </> : <>
                 <div><LoadingPage /></div>

@@ -1,14 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
     Pagination,
     PaginationContent,
     PaginationItem,
     PaginationLink,
     PaginationNext,
-    PaginationPrevious
+    PaginationPrevious,
+
 } from "@/components/ui/pagination";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 // Generic type for paginated data
 interface PaginationProps<T> {
@@ -16,13 +15,15 @@ interface PaginationProps<T> {
     itemsPerPage?: number;
     renderItem: (item: T) => React.ReactNode;
     variant?: 'table' | 'grid' | 'list';
+    gridClass?: string;
 }
 
 export function PaginatedContent<T>({
     items,
     itemsPerPage = 6,
     renderItem,
-    variant = 'grid'
+    variant = 'grid',
+    gridClass = "grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
 }: PaginationProps<T>) {
     const [currentPage, setCurrentPage] = useState(1);
 
@@ -35,20 +36,30 @@ export function PaginatedContent<T>({
         return items.slice(startIndex, startIndex + itemsPerPage);
     };
 
+    // Generate page numbers to display
+    const pageNumbers = useMemo(() => {
+        const range = 5; // Number of page numbers to show on each side of current page
+        let start = Math.max(1, currentPage - range);
+        let end = Math.min(totalPages, currentPage + range);
+
+        // Adjust start and end to always show 10 page numbers if possible
+        if (end - start + 1 < 10) {
+            if (start === 1) {
+                end = Math.min(totalPages, start + 9);
+            } else {
+                start = Math.max(1, end - 9);
+            }
+        }
+
+        return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+    }, [currentPage, totalPages]);
+
     // Pagination handlers
-    const goToNextPage = () => {
-        setCurrentPage(Math.min(currentPage + 1, totalPages));
-    };
-
-    const goToPreviousPage = () => {
-        setCurrentPage(Math.max(currentPage - 1, 1));
-    };
-
     const goToPage = (page: number) => {
         setCurrentPage(page);
     };
 
-    // Render variants
+    // Render variants (same as previous implementation)
     const renderVariant = () => {
         const currentItems = getCurrentPageItems();
 
@@ -58,7 +69,6 @@ export function PaginatedContent<T>({
                     <table className="w-full border-collapse">
                         <thead>
                             <tr className="bg-gray-100">
-                                {/* Add table headers as needed */}
                                 <th className="p-2 border">ID</th>
                                 <th className="p-2 border">Name</th>
                             </tr>
@@ -75,13 +85,11 @@ export function PaginatedContent<T>({
 
             case 'grid':
                 return (
-                    <div className="grid grid-cols-3 gap-4">
+                    <div className={gridClass}>
                         {currentItems.map((item, index) => (
-                            <Card key={index} className="hover:shadow-lg transition-shadow">
-                                <CardContent className="p-4">
-                                    {renderItem(item)}
-                                </CardContent>
-                            </Card>
+                            <div key={index} className="p-4">
+                                {renderItem(item)}
+                            </div>
                         ))}
                     </div>
                 );
@@ -99,37 +107,84 @@ export function PaginatedContent<T>({
         }
     };
 
+    // Don't render pagination if there's only one page
+    if (totalPages <= 1) {
+        return renderVariant();
+    }
+
+    const pageSecItemClass = "cursor-pointer"
+    const pageItemClass = "cursor-pointer bg-violet-500 hover:bg-violet-600 active:bg-violet-700 focus:outline-none focus:ring focus:ring-violet-300 rounded-md"
+    const currentPageItemClass = "bg-sky-500"
+
     return (
         <div>
             {renderVariant()}
 
-            <div className="mt-6 flex justify-center items-center space-x-2">
+            <div className="mt-6 flex justify-center items-center">
                 <Pagination>
                     <PaginationContent>
-                        <PaginationItem>
-                            <PaginationPrevious
-                                onClick={goToPreviousPage}
-                            // disabled={currentPage === 1}
-                            />
-                        </PaginationItem>
+                        {/* First page button */}
+                        {currentPage > 1 && (
+                            <PaginationItem className={pageSecItemClass}>
+                                <PaginationLink onClick={() => goToPage(1)}>
+                                    First
+                                </PaginationLink>
+                            </PaginationItem>
+                        )}
 
-                        {[...Array(totalPages)].map((_, index) => (
-                            <PaginationItem key={index}>
+                        {/* Previous page button */}
+                        {currentPage > 1 && (
+                            <PaginationItem className={pageSecItemClass}>
+                                <PaginationLink onClick={() => goToPage(Math.max(1, currentPage - 1))}>
+                                    Prev
+                                </PaginationLink>
+                            </PaginationItem>
+                        )}
+
+                        {/* Ellipsis before page numbers if needed */}
+                        {pageNumbers[0] > 1 && (
+                            <PaginationItem className={pageItemClass}>
+                                <PaginationLink>...</PaginationLink>
+                            </PaginationItem>
+                        )}
+
+                        {/* Page numbers */}
+                        {pageNumbers.map((page) => (
+                            <PaginationItem key={page} className={pageItemClass}>
                                 <PaginationLink
-                                    isActive={currentPage === index + 1}
-                                    onClick={() => goToPage(index + 1)}
+                                    isActive={currentPage === page}
+                                    onClick={() => goToPage(page)}
+                                    className={`${currentPage === page ? currentPageItemClass : ""}`}
                                 >
-                                    {index + 1}
+                                    {page}
                                 </PaginationLink>
                             </PaginationItem>
                         ))}
 
-                        <PaginationItem>
-                            <PaginationNext
-                                onClick={goToNextPage}
-                            // disabled={currentPage === totalPages}
-                            />
-                        </PaginationItem>
+                        {/* Ellipsis after page numbers if needed */}
+                        {pageNumbers[pageNumbers.length - 1] < totalPages && (
+                            <PaginationItem>
+                                <PaginationLink>...</PaginationLink>
+                            </PaginationItem>
+                        )}
+
+                        {/* Next page button */}
+                        {currentPage < totalPages && (
+                            <PaginationItem className={pageSecItemClass}>
+                                <PaginationLink onClick={() => goToPage(Math.min(totalPages, currentPage + 1))}>
+                                    Next
+                                </PaginationLink>
+                            </PaginationItem>
+                        )}
+
+                        {/* Last page button */}
+                        {currentPage < totalPages && (
+                            <PaginationItem className={pageSecItemClass}>
+                                <PaginationLink onClick={() => goToPage(totalPages)}>
+                                    Last
+                                </PaginationLink>
+                            </PaginationItem>
+                        )}
                     </PaginationContent>
                 </Pagination>
             </div>

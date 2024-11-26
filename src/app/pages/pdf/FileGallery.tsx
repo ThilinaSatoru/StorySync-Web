@@ -8,6 +8,7 @@ import Image from 'next/image';
 import { cn } from "@/lib/utils"
 import { useRouter } from 'next/navigation';
 import { Pdf, Author, Tag } from '@/services/dto';
+import { PaginatedContent } from '@/app/components/PaginatedComp';
 
 
 
@@ -40,23 +41,9 @@ const FileGallery: React.FC<{ files: Pdf[] }> = ({ files }) => {
 
 
     const handleCardClick = (file: Pdf) => {
-        // const basePath = "E:\\Downs\\base";
-        // // Escape backslashes for the regular expression
-        // const escapedBasePath = basePath.replace(/\\/g, '\\\\');
-        // // Ensure filePath starts with basePath for safety
-        // if (!file.filePath.startsWith(basePath)) {
-        //     console.error("Invalid file path. Does not start with base directory.");
-        //     return;
-        // }
-
-        // // Replace the base path with an empty string to get a relative path
-        // const relativePath = file.filePath.replace(new RegExp(`^${escapedBasePath}`), '').replace(/\\/g, '/');
-        // Encode the relative path to handle special characters
-        const encodedPath = encodeURIComponent(file.filePath);
         // Navigate to the target page
-        router.push(`/pages/pdf/${encodedPath}`);
+        router.push(`/pages/pdf/${encodeURIComponent(file.filePath)}`);
     };
-
 
 
     return (
@@ -93,50 +80,59 @@ const FileGallery: React.FC<{ files: Pdf[] }> = ({ files }) => {
                 </Select>
             </div>
 
-            <div className="grid grid-cols-2 gap-5 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-                {filteredFiles.map(file => (
-                    <Card
-                        key={file.id}
-                        className="flex flex-col h-[400px] hover:shadow-xl transition-all duration-300  ease-in-out hover:scale-100"
-                    >
-                        <div className="relative h-[330px] w-auto overflow-hidden rounded-md  cursor-pointer" onClick={() => handleCardClick(file)}>
-                            <Image
-                                src={file.thumbnail || "/2.jpg"}
-                                alt={file.fileName}
-                                fill
-                                // className="object-cover"
-                                className={cn(
-                                    "h-auto w-auto object-cover transition-all hover:scale-105",
-                                    "portrait "
-                                )}
-                            />
-                        </div>
-                        <CardHeader className="p-3">
-                            <CardTitle className="pb-1">{getFileNameWithoutExtension(file.fileName)}</CardTitle>
-                            <CardDescription>
-                                {file.authors.map(author => (
-                                    <Badge key={author.id} variant="secondary" className="mr-1 cursor-pointer ">
-                                        {author.name}
-                                    </Badge>
-                                ))}
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent className="flex flex-row justify-between p-2 mr-1">
-                            <div className="flex flex-wrap gap-1 mb-0">
-                                {file.language && (
-                                    <Badge variant="outline">{file.language}</Badge>
-                                )}
-                                {file.tags.map(tag => (
-                                    <Badge key={tag.id} className="cursor-pointer ">{tag.name}</Badge>
-                                ))}
+
+            <PaginatedContent<Pdf>
+                items={filteredFiles}
+                itemsPerPage={10}
+                variant="grid"
+                gridClass='grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5'
+                renderItem={(file) => (
+                    <>
+                        {/*  className="grid grid-cols-2 gap-5 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5" */}
+                        <Card
+                            key={file.id}
+                            className="flex flex-col h-[400px] hover:shadow-xl transition-all duration-300  ease-in-out hover:scale-100"
+                        >
+                            <div className="relative h-[330px] w-auto overflow-hidden rounded-md  cursor-pointer" onClick={() => handleCardClick(file)}>
+                                <Image
+                                    src={file.thumbnail || "/2.jpg"}
+                                    alt={file.fileName}
+                                    fill
+                                    // className="object-cover"
+                                    className={cn(
+                                        "h-auto w-auto object-cover transition-all hover:scale-105",
+                                        "portrait "
+                                    )}
+                                />
                             </div>
-                            <div className="text-xs italic text-gray-500 text-muted-foreground">
-                                Added: {new Date(file.createdTime).toLocaleDateString()}
-                            </div>
-                        </CardContent>
-                    </Card>
-                ))}
-            </div>
+                            <CardHeader className="p-3">
+                                <CardTitle className="pb-1">{getFileNameWithoutExtension(file.fileName)}</CardTitle>
+                                <CardDescription>
+                                    {file.authors.map(author => (
+                                        <Badge key={author.id} variant="secondary" className="mr-1 cursor-pointer ">
+                                            {author.name}
+                                        </Badge>
+                                    ))}
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent className="flex flex-row justify-between p-2 mr-1">
+                                <div className="flex flex-wrap gap-1 mb-0">
+                                    {file.language && (
+                                        <Badge variant="outline">{file.language}</Badge>
+                                    )}
+                                    {file.tags.map(tag => (
+                                        <Badge key={tag.id} className="cursor-pointer ">{tag.name}</Badge>
+                                    ))}
+                                </div>
+                                <div className="text-xs italic text-gray-500 text-muted-foreground">
+                                    Added: {new Date(file.createdTime).toLocaleDateString()}
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </>
+                )}
+            />
+
 
         </div>
     );
