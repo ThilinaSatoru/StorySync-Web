@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useMemo, useCallback } from "react";
-import { getFiles } from "@/services/fileService";
+import { getFiles } from "@/services/pdfService";
 import { getAllTags } from '@/services/tagService';
 import { getAllAuthors } from '@/services/authorService';
-import { File, Author, Tag } from "@/services/dto";
+import { Pdf, Author, Tag } from "@/services/dto";
 import UpdateFileForm from "./fileForm";
 import TableSkeleton from "@/app/skeletons/files-tbody";
 import { Badge } from "@/components/ui/badge";
@@ -22,9 +22,9 @@ import { MultiSelect } from "@/app/components/multi-select";
 import { Cat, Dog, Fish, Rabbit, Turtle } from "lucide-react";
 
 const FileTable = () => {
-    const [files, setFiles] = useState<File[]>([]);
+    const [files, setFiles] = useState<Pdf[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
-    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [selectedFile, setSelectedFile] = useState<Pdf | null>(null);
 
     // Filter states
     const [allTags, setAllTags] = useState<Tag[]>([]);
@@ -155,7 +155,7 @@ const FileTable = () => {
     };
 
     // Edit file handler
-    const handleEditClick = (file: File) => {
+    const handleEditClick = (file: Pdf) => {
         setSelectedFile(file);
     };
 
@@ -227,7 +227,7 @@ const FileTable = () => {
                                     <TableCell>
                                         <span className="font-medium">{file.fileName}</span>
                                     </TableCell>
-                                    <TableCell>{file.fileType}</TableCell>
+                                    <TableCell>{file.fileSize}</TableCell>
                                     <TableCell>{file.folderName}</TableCell>
                                     <TableCell>
                                         <div className="flex flex-wrap gap-2">

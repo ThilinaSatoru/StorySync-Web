@@ -6,19 +6,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogFooter, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast"
-import { deleteFile, updateFile } from '@/services/fileService';
+import { deleteFile, updateFile } from '@/services/pdfService';
 import { getAllTags } from '@/services/tagService';
 import { getAllAuthors } from '@/services/authorService';
-import { File, Author, Tag } from '@/services/dto';
+import { Pdf, Author, Tag } from '@/services/dto';
 
 interface UpdateFileFormProps { // ID of the file to update
-    fileData: Partial<File>; // Pre-fill form with existing file data
+    fileData: Partial<Pdf>; // Pre-fill form with existing file data
     onUpdateSuccess?: () => void;
 }
 
 
 const UpdateFileForm: React.FC<UpdateFileFormProps> = ({ fileData, onUpdateSuccess }: UpdateFileFormProps) => {
-    const [formData, setFormData] = useState<Partial<File>>(fileData);
+    const [formData, setFormData] = useState<Partial<Pdf>>(fileData);
     const [allTags, setAllTags] = useState<Tag[]>([]); // All available tags
     const [allAuthors, setAllAuthors] = useState<Author[]>([]);
     const [loading, setLoading] = useState(false);

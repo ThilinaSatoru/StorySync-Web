@@ -6,6 +6,7 @@ import { AppSidebar } from "@/components/app-sidebar"
 import "./globals.css";
 import { ModeToggle } from "@/components/theme-toggle";
 import Head from 'next/head';
+import Navbar from "./components/NavBar";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -38,12 +39,11 @@ export default function RootLayout({ children, }: Readonly<{ children: React.Rea
           enableSystem
           disableTransitionOnChange
         >
-          <div className="m-1 p-1">
-            <ModeToggle />
-          </div>
-          {children}
-        </ThemeProvider>
+          <Navbar />
 
+          {children}
+
+        </ThemeProvider>
       </body>
     </html>
   );

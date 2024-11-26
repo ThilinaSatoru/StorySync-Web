@@ -1,15 +1,15 @@
 import React, { useEffect, useState, useMemo, useCallback } from "react";
-import { getFiles } from "@/services/fileService";
-import { File } from "@/services/dto";
-import PDFComicViewer from "@/app/pages/admin/PDFViewer";
+import { getFiles } from "@/services/pdfService";
+import { Pdf } from "@/services/dto";
 import PDFV from "./PDFV"
+import PdfViewer from "./PdfViewer";
 
 const PDFGallery = () => {
-    const [files, setFiles] = useState<File[]>([]);
+    const [files, setFiles] = useState<Pdf[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
 
-    const defaultFile: File = {
+    const defaultFile: Pdf = {
         id: 0,
         filePath: '',
         fileName: '',
@@ -94,11 +94,11 @@ const PDFGallery = () => {
                         //     />
                         // ))
 
-                        // < PDFComicViewer
+                        // < PdfViewer
                         //     file={pdfFile}
                         // />
 
-                        <PDFV fileUrl={pdfFile.filePath} />
+                        // <PDFV fileUrl={pdfFile.filePath} />
                     }
                 </div>
             ) : (

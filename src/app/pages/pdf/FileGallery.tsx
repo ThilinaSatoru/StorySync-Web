@@ -7,38 +7,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import Image from 'next/image';
 import { cn } from "@/lib/utils"
 import { useRouter } from 'next/navigation';
+import { Pdf, Author, Tag } from '@/services/dto';
 
-// Assuming these are your existing interfaces
-interface Tag {
-    id: number;
-    name: string;
-}
 
-interface Author {
-    id: number;
-    name: string;
-}
 
-interface File {
-    id: number;
-    filePath: string;
-    fileName: string;
-    folderName: string;
-    cover: string | null;
-    fileType: string;
-    language: string | null;
-    lastModified: string;
-    createdAt: string;
-    tags: Tag[];
-    authors: Author[];
-}
-
-const FileGallery: React.FC<{ files: File[] }> = ({ files }) => {
+const FileGallery: React.FC<{ files: Pdf[] }> = ({ files }) => {
     const router = useRouter();
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedLanguage, setSelectedLanguage] = useState('');
     const [selectedTag, setSelectedTag] = useState('');
-    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [selectedFile, setSelectedFile] = useState<Pdf | null>(null);
 
     // Extract unique languages and tags
     const languages = Array.from(new Set(files.map(file => file.language).filter(Boolean)));
@@ -54,26 +32,36 @@ const FileGallery: React.FC<{ files: File[] }> = ({ files }) => {
         });
     }, [files, searchTerm, selectedLanguage, selectedTag]);
 
+
     // Extract filename without extension
     const getFileNameWithoutExtension = (fullFileName: string) => {
         return fullFileName.replace(/\.[^/.]+$/, "");
     };
 
-    const handleCardClick = (file: File) => {
 
-        const basePath = "E:\\Downs\\kat\\kath\\";
-        // Escape backslashes in basePath for the regular expression
-        const escapedBasePath = basePath.replace(/\\/g, '\\\\');
-        // Replace the base path with an empty string
-        const relativePath = file.filePath.replace(new RegExp(`^${escapedBasePath}`), '');
+    const handleCardClick = (file: Pdf) => {
+        // const basePath = "E:\\Downs\\base";
+        // // Escape backslashes for the regular expression
+        // const escapedBasePath = basePath.replace(/\\/g, '\\\\');
+        // // Ensure filePath starts with basePath for safety
+        // if (!file.filePath.startsWith(basePath)) {
+        //     console.error("Invalid file path. Does not start with base directory.");
+        //     return;
+        // }
 
-        router.push(`/pages/pdf/${encodeURIComponent(relativePath)}`);
+        // // Replace the base path with an empty string to get a relative path
+        // const relativePath = file.filePath.replace(new RegExp(`^${escapedBasePath}`), '').replace(/\\/g, '/');
+        // Encode the relative path to handle special characters
+        const encodedPath = encodeURIComponent(file.filePath);
+        // Navigate to the target page
+        router.push(`/pages/pdf/${encodedPath}`);
     };
 
 
+
     return (
-        <div className="container mx-auto p-4">
-            <div className="mb-4 flex space-x-2">
+        <div className="container p-4 mx-auto">
+            <div className="flex mb-4 space-x-2">
                 <Input
                     placeholder="Search files..."
                     value={searchTerm}
@@ -105,7 +93,7 @@ const FileGallery: React.FC<{ files: File[] }> = ({ files }) => {
                 </Select>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
+            <div className="grid grid-cols-2 gap-5 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
                 {filteredFiles.map(file => (
                     <Card
                         key={file.id}
@@ -113,7 +101,7 @@ const FileGallery: React.FC<{ files: File[] }> = ({ files }) => {
                     >
                         <div className="relative h-[330px] w-auto overflow-hidden rounded-md  cursor-pointer" onClick={() => handleCardClick(file)}>
                             <Image
-                                src={file.cover || "/2.jpg"}
+                                src={file.thumbnail || "/2.jpg"}
                                 alt={file.fileName}
                                 fill
                                 // className="object-cover"
@@ -143,7 +131,7 @@ const FileGallery: React.FC<{ files: File[] }> = ({ files }) => {
                                 ))}
                             </div>
                             <div className="text-xs italic text-gray-500 text-muted-foreground">
-                                Added: {new Date(file.createdAt).toLocaleDateString()}
+                                Added: {new Date(file.createdTime).toLocaleDateString()}
                             </div>
                         </CardContent>
                     </Card>

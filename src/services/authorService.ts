@@ -1,5 +1,5 @@
 import apiClient from './apiClient';
-import { File, Author, Tag } from './dto';
+import { Pdf, Author, Tag } from './dto';
 
 
 

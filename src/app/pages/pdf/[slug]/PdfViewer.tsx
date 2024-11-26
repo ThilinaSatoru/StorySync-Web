@@ -21,6 +21,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { useRouter } from 'next/navigation';
+import { API_ROUTES } from '@/services/apiClient';
+import LoadingPage from '@/app/components/LoadingPage';
+import { getFileUrlByFileName } from '@/services/pdfService'
+import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse } from 'axios';
 
 // Import PDF worker
 pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
@@ -37,19 +41,77 @@ const shortcutSchema = z.object({
 
 
 interface PdfViewerProps {
-    filepath: string;
+    fileName: string;
+    apiUrl?: string;
 }
 
-const PdfViewer: React.FC<PdfViewerProps> = ({ filepath }) => {
+const PdfViewer: React.FC<PdfViewerProps> = ({
+    fileName,
+    apiUrl = 'http://localhost:8080/api/pdf/file?fileName='
+}) => {
     const router = useRouter();
-    const BASE_API_URL = "http://localhost:8080/api/pdf";
+    // const [pdfFile, setPdfFile] = useState<string | { url: string }>("");
+    const [loading, setLoading] = useState<boolean>(true);
+    const [error, setError] = useState<string | null>(null);
+    const BASE_API_URL = `${process.env.NEXT_PUBLIC_API_BASE_URL}${API_ROUTES.PDF}`;
     const [numPages, setNumPages] = useState<number | null>(null);
     const [pageNumber, setPageNumber] = useState<number>(1);
     const [scale, setScale] = useState<number>(1);
     const [rotation, setRotation] = useState<number>(0);
     const [isConfigOpen, setIsConfigOpen] = useState(false);
-    const fileUrl = `${BASE_API_URL}/${filepath}`;
-    console.info(fileUrl);
+
+
+    const [pdfFile, setPdfFile] = useState<string | { url: string }>("");
+
+    // apiUrl = 'http://localhost:8080/api/pdf/file?fileName='
+    useEffect(() => {
+        const fetchPDF = async () => {
+            try {
+                // Use responseType to ensure correct handling of binary data
+                const response = await axios.get(`${apiUrl}${fileName}`, {
+                    responseType: 'arraybuffer', // Use arraybuffer instead of blob
+                    headers: {
+                        'Accept': 'application/pdf'
+                    }
+                });
+
+                // Create Blob from ArrayBuffer
+                const file = new Blob([response.data], { type: 'application/pdf' });
+                const fileURL = URL.createObjectURL(file);
+                console.log('PDF File URL:', fileURL);
+
+                setPdfFile({ url: fileURL });
+            } catch (err) {
+                console.error('Error fetching PDF:', err);
+
+                // More detailed error handling
+                if (axios.isAxiosError(err)) {
+                    if (err.response) {
+                        // The request was made and the server responded with a status code
+                        setError(`Server error: ${err.response.status} - ${err.response.statusText}`);
+                    } else if (err.request) {
+                        // The request was made but no response was received
+                        setError('No response received from server');
+                    } else {
+                        // Something happened in setting up the request
+                        setError('Error setting up the request');
+                    }
+                } else {
+                    setError('An unexpected error occurred');
+                }
+            }
+        };
+
+        fetchPDF();
+
+        // Cleanup to revoke object URL
+        return () => {
+            if (typeof pdfFile === 'object' && 'url' in pdfFile) {
+                URL.revokeObjectURL(pdfFile.url);
+            }
+        };
+    }, [fileName, apiUrl]);
+
 
     // Default shortcuts
     const [shortcuts, setShortcuts] = useState({
@@ -67,6 +129,7 @@ const PdfViewer: React.FC<PdfViewerProps> = ({ filepath }) => {
     });
 
     const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
+        setLoading(false);
         setNumPages(numPages);
     };
 
@@ -123,18 +186,6 @@ const PdfViewer: React.FC<PdfViewerProps> = ({ filepath }) => {
         setIsConfigOpen(false);
     };
 
-    const documentProps: DocumentProps = {
-        file: fileUrl,
-        onLoadSuccess: onDocumentLoadSuccess,
-    };
-
-    const pageProps: PageProps = {
-        pageNumber: pageNumber,
-        width: 800,
-        renderTextLayer: false,
-        renderAnnotationLayer: false,
-    };
-
     const isBrowser = () => typeof window !== 'undefined'; //The approach recommended by Next.js
     function scrollToTop() {
         if (!isBrowser()) return;
@@ -145,23 +196,45 @@ const PdfViewer: React.FC<PdfViewerProps> = ({ filepath }) => {
         router.push("/pages/pdf")
     }
 
+    const documentProps: DocumentProps = {
+        file: pdfFile,
+        onLoadSuccess: onDocumentLoadSuccess,
+
+    };
+
+    const pageProps: PageProps = {
+        pageNumber: pageNumber,
+        width: 800,
+        renderTextLayer: false,
+        renderAnnotationLayer: false,
+    };
+
+    if (error) {
+        return (
+            <div className="error-container">
+                <p>Error loading PDF:</p>
+                <p>{error}</p>
+            </div>
+        );
+    }
+
     return (
-        <div className="flex flex-col items-center p-4 min-h-screen relative">
+        <div className="relative flex flex-col items-center min-h-screen p-4">
             <button
                 onClick={handlerOnClose}
-                className="absolute top-4 right-4 p-2 bg-red-500 text-white rounded-full">
+                className="absolute p-2 text-white bg-red-500 rounded-full top-4 right-4">
                 <X />
             </button>
 
-            <div className="flex items-center space-x-4 mb-4">
+            <div className="flex items-center mb-4 space-x-4">
                 <Button
                     variant="outline"
                     size="icon"
                     onClick={() => changePage(-1)}
                     disabled={pageNumber <= 1}
-                    className="p-2 bg-blue-500 text-white rounded disabled:opacity-50"
+                    className="p-2 text-white bg-blue-500 rounded disabled:opacity-50"
                 >
-                    <ChevronLeft className="h-4 w-4" />
+                    <ChevronLeft className="w-4 h-4" />
                 </Button>
 
                 <span>Page {pageNumber} of {numPages || '...'}</span>
@@ -171,9 +244,9 @@ const PdfViewer: React.FC<PdfViewerProps> = ({ filepath }) => {
                     size="icon"
                     onClick={() => changePage(1)}
                     disabled={pageNumber >= (numPages || 1)}
-                    className="p-2 bg-blue-500 text-white rounded disabled:opacity-50"
+                    className="p-2 text-white bg-blue-500 rounded disabled:opacity-50"
                 >
-                    <ChevronLeft className="h-4 w-4" />
+                    <ChevronRight className="w-4 h-4" />
                 </Button>
 
                 <div className="flex items-center space-x-2">
@@ -183,15 +256,15 @@ const PdfViewer: React.FC<PdfViewerProps> = ({ filepath }) => {
                         onClick={zoomOut}
                         disabled={scale <= 0.5}
                     >
-                        <Minus className="h-4 w-4" />
+                        <Minus className="w-4 h-4" />
                     </Button>
 
                     <Button
                         size="icon"
                         onClick={resetZoom}
-                    // className="p-2 bg-green-500 text-white rounded"
+                    // className="p-2 text-white bg-green-500 rounded"
                     >
-                        <ScanEye className="h-4 w-4" />
+                        <ScanEye className="w-4 h-4" />
                     </Button>
 
                     <Button
@@ -200,7 +273,7 @@ const PdfViewer: React.FC<PdfViewerProps> = ({ filepath }) => {
                         onClick={zoomIn}
                         disabled={scale >= 2}
                     >
-                        <Plus className="h-4 w-4" />
+                        <Plus className="w-4 h-4" />
                     </Button>
                     {/* <Button
                         variant="outline"

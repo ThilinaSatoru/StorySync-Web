@@ -5,6 +5,6 @@ export default async function Page({ params, }: { params: Promise<{ slug: string
 
 
     return <div>
-        <PdfViewer filepath={slug} />
+        <PdfViewer fileName={slug} />
     </div>
 }
